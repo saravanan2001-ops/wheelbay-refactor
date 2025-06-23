@@ -688,10 +688,10 @@ $conn->close(); // Close the database connection
     <header class="wheelbay-header">
         <img class="wheelbay-logo" src="img/Logo01.png" alt="WheelBay Logo">
         <nav>
-            <a href="home.html">Home<span></span></a>
-            <a href="cars.html">Cars<span></span></a>
-            <a href="wishlist.html">Wishlist<span></span></a>
-            <a href="about.html">About<span></span></a>
+            <a href="home.php">Home<span></span></a>
+            <a href="cars.php">Cars<span></span></a>
+            <a href="wishlist.php">Wishlist<span></span></a>
+            <a href="about.php">About<span></span></a>
             <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="logout.php">Logout<span></span></a>
             <?php else: ?>

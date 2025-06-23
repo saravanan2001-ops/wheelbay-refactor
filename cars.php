@@ -62,11 +62,11 @@ try {
     <header class="wheelbay-header">
         <img class="wheelbay-logo" src="img/Logo01.png" alt="WheelBay Logo">
         <nav>
-            <a href="home.html">Home<span></span></a>
+            <a href="home.php">Home<span></span></a>
             <a href="cars.php">Cars<span></span></a>
-            <a href="wishlist.html">Wishlist<span></span></a>
-            <a href="about.html">About<span></span></a>
-            <a href="login.html">Login<span></span></a>
+            <a href="wishlist.php">Wishlist<span></span></a>
+            <a href="about.php">About<span></span></a>
+            <a href="login.php">Login<span></span></a>
         </nav>
     </header>
 
@@ -179,6 +179,15 @@ try {
                                 <span></span>
                                 View Details
                             </a>
+                            <a href="order.php?id=<?php echo $car['id']; ?>" class="wheelbay-banner-button" style="--clr:#ff6b6b;">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                Buy Now
+                            </a>
                             <button class="wheelbay-wishlist-button" onclick="addToWishlist(<?php echo $car['id']; ?>, this)"
                                     data-in-wishlist="<?php echo in_array($car['id'], $wishlistItems) ? 'true' : 'false'; ?>">
                                 <ion-icon name="<?php echo in_array($car['id'], $wishlistItems) ? 'heart' : 'heart-outline'; ?>"></ion-icon>
@@ -217,63 +226,44 @@ try {
 
         // Wishlist functionality
         function addToWishlist(carId, button) {
-            const heartIcon = button.querySelector('ion-icon');
-            
-            // Toggle heart icon
-            if (heartIcon.getAttribute('name') === 'heart-outline') {
-                heartIcon.setAttribute('name', 'heart');
-                
-                // Send AJAX request to add to wishlist
-                fetch('add_to_wishlist.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ car_id: carId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message || "Car added to wishlist!");
-                    } else {
-                        alert(data.error || "Failed to add to wishlist");
-                        heartIcon.setAttribute('name', 'heart-outline');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    heartIcon.setAttribute('name', 'heart-outline');
-                    alert("An error occurred. Please try again.");
-                });
-                
-            } else {
-                heartIcon.setAttribute('name', 'heart-outline');
-                
-                // Send AJAX request to remove from wishlist
-                fetch('remove_from_wishlist.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ car_id: carId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message || "Car removed from wishlist!");
-                    } else {
-                        alert(data.error || "Failed to remove from wishlist");
-                        heartIcon.setAttribute('name', 'heart');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    heartIcon.setAttribute('name', 'heart');
-                    alert("An error occurred. Please try again.");
-                });
-            }
-        }
+        const heartIcon = button.querySelector('ion-icon');
+        const isAdding = heartIcon.getAttribute('name') === 'heart-outline';
+        const endpoint = isAdding ? 'add_to_wishlist.php' : 'remove_from_wishlist.php';
+        const successIcon = isAdding ? 'heart' : 'heart-outline';
+        const failureIcon = isAdding ? 'heart-outline' : 'heart'; // Revert on failure
 
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ car_id: carId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Handle HTTP errors like 404 Not Found or 500 Internal Server Error
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // SUCCESS: Now update the icon
+                heartIcon.setAttribute('name', successIcon);
+                alert(data.message || (isAdding ? "Car added to wishlist!" : "Car removed from wishlist!"));
+            } else {
+                // FAILURE: Server returned an error, alert the user
+                alert(data.error || "An error occurred. Please try again.");
+                // Do NOT change the icon
+            }
+        })
+        .catch(error => {
+            // CATCH: Network error or JSON parsing error
+            console.error('Error:', error);
+            alert("A network error occurred. Please check your connection and try again.");
+            // Do NOT change the icon
+        });
+    }
         // Filter functionality
         function filterCars() {
             const brandFilter = document.getElementById('brand-filter').value.toLowerCase();

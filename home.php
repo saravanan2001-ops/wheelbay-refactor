@@ -1,5 +1,6 @@
 <?php
 session_start();
+$loggedInUserId = $_SESSION['user_id'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

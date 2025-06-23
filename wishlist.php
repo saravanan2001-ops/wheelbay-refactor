@@ -1,17 +1,23 @@
 <?php
 session_start();
 
-// Redirect to login if not logged in
+// Redirect to login if user is not logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
+    header("Location: login.php");
+    exit();
 }
 
 // Database connection
-require_once 'db_connection.php';
+$host = 'localhost';
+$dbname = 'wheelbay';
+$username = 'root';
+$password = '';
 
-// Fetch user's wishlist
 try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Fetch all cars in user's wishlist
     $stmt = $conn->prepare("
         SELECT c.* 
         FROM cars c
@@ -19,10 +25,11 @@ try {
         WHERE w.user_id = ?
     ");
     $stmt->execute([$_SESSION['user_id']]);
-    $wishlistItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $wishlistCars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
 } catch(PDOException $e) {
-    $error = "Failed to load wishlist: " . $e->getMessage();
-    $wishlistItems = [];
+    $wishlistCars = [];
+    $error = $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -30,44 +37,40 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist | WheelBay</title>
+    <title>My Wishlist | WheelBay</title>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="css/cars.css">
     <style>
-        /* Add your existing styles here */
-        .empty-wishlist {
+        .wheelbay-card {
+            display: block;
+            transition: all 0.3s ease;
+        }
+        .no-cars-message, .error-message {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 50px;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #ff5555;
         }
-        
-        .empty-wishlist h3 {
-            color: #17fee3;
-            margin-bottom: 20px;
-            font-size: 1.8em;
+        .car-image {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
         }
-        
-        .empty-wishlist a {
-            color: #17fee3;
+        .wishlist-empty {
+            text-align: center;
+            padding: 4rem;
+            font-size: 1.5rem;
+        }
+        .wishlist-empty a {
+            color: #00eeff;
             text-decoration: none;
-            border: 2px solid #17fee3;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: all 0.3s;
+            font-weight: bold;
         }
-        
-        .empty-wishlist a:hover {
-            background-color: #17fee3;
-            color: #000;
-        }
-        
-        .wishlist-count {
-            background-color: #17fee3;
-            color: #000;
-            border-radius: 50%;
-            padding: 2px 8px;
-            font-size: 0.8em;
-            margin-left: 5px;
+        .wishlist-empty a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -84,25 +87,26 @@ try {
     </header>
 
     <main class="wheelbay-main">
-        <h2 class="wheelbay-heading">Your Wishlist <span class="wishlist-count" id="wishlist-count"><?php echo count($wishlistItems); ?></span></h2>
-        
-        <div class="wheelbay-car-list" id="wishlist-container">
-            <?php if(isset($error)): ?>
-                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
-            <?php elseif(empty($wishlistItems)): ?>
-                <div class="empty-wishlist">
-                    <h3>Your Wishlist is Empty</h3>
-                    <p>You haven't added any cars to your wishlist yet.</p>
-                    <a href="cars.php">Browse Cars</a>
+        <h2 class="wheelbay-heading">My Wishlist</h2>
+        <div class="wheelbay-car-list" id="car-list">
+            <?php if (isset($error)): ?>
+                <div class="error-message">Database Error: <?php echo htmlspecialchars($error); ?></div>
+            <?php elseif (empty($wishlistCars)): ?>
+                <div class="wishlist-empty">
+                    <p>Your wishlist is currently empty.</p>
+                    <p><a href="cars.php">Browse our collection</a> to add cars to your wishlist.</p>
                 </div>
             <?php else: ?>
-                <?php foreach($wishlistItems as $car): ?>
+                <?php foreach ($wishlistCars as $car): ?>
                     <?php 
-                    $images = array_map('trim', explode(',', $car['images']));
-                    $images = array_filter($images);
-                    $mainImage = !empty($images) ? 'uploads/car_images/' . $images[0] : 'img/default-car.jpg';
+                    // Process images - split by comma and trim whitespace
+                    $imageFiles = array_map('trim', explode(',', $car['images']));
+                    // Filter out empty entries
+                    $imageFiles = array_filter($imageFiles);
+                    // Get first image or use default
+                    $mainImage = !empty($imageFiles) ? 'uploads/car_images/' . $imageFiles[0] : 'img/default-car.jpg';
                     ?>
-                    <div class="wheelbay-card" data-car-id="<?php echo $car['id']; ?>">
+                    <div class="wheelbay-card">
                         <img src="<?php echo htmlspecialchars($mainImage); ?>" alt="<?php echo htmlspecialchars($car['make'] . ' ' . $car['model']); ?>" class="car-image">
                         <h3><?php echo htmlspecialchars($car['make'] . ' ' . $car['model']); ?></h3>
                         <div class="wheelbay-card-features">
@@ -140,6 +144,15 @@ try {
                                 <span></span>
                                 View Details
                             </a>
+                            <a href="order.php?id=<?php echo $car['id']; ?>" class="wheelbay-banner-button" style="--clr:#ff6b6b;">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                Buy Now
+                            </a>
                             <button class="wheelbay-wishlist-button" onclick="removeFromWishlist(<?php echo $car['id']; ?>, this)">
                                 <ion-icon name="heart"></ion-icon>
                             </button>
@@ -151,7 +164,7 @@ try {
     </main>
 
     <footer class="wheelbay-footer">
-        <p>&copy; <?php echo date('Y'); ?> WheelBay. All rights reserved.</p>
+        <p>&copy; 2023 WheelBay. All rights reserved.</p>
         <div class="wheelbay-social-links">
             <a href="#" aria-label="Facebook" onclick="Social()"><ion-icon name="logo-facebook"></ion-icon></a>
             <a href="#" aria-label="Instagram" onclick="Social()"><ion-icon name="logo-instagram"></ion-icon></a>
@@ -160,66 +173,9 @@ try {
     </footer>
 
     <script>
-        // Function to remove item from wishlist
-        async function removeFromWishlist(carId, button) {
-            try {
-                const response = await fetch('remove_from_wishlist.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ car_id: carId })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Remove the card from UI with animation
-                    const card = button.closest('.wheelbay-card');
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        updateWishlistCount();
-                        
-                        // If no more items, show empty message
-                        if (document.querySelectorAll('.wheelbay-card').length === 0) {
-                            showEmptyWishlist();
-                        }
-                    }, 300);
-                    
-                    alert(data.message || "Car removed from wishlist!");
-                } else {
-                    alert(data.error || "Failed to remove from wishlist");
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert("An error occurred. Please try again.");
-            }
-        }
-        
-        // Update wishlist count
-        function updateWishlistCount() {
-            const count = document.querySelectorAll('.wheelbay-card').length;
-            const countElement = document.getElementById('wishlist-count');
-            if (countElement) {
-                countElement.textContent = count;
-            }
-        }
-        
-        // Show empty wishlist message
-        function showEmptyWishlist() {
-            const container = document.getElementById('wishlist-container');
-            container.innerHTML = `
-                <div class="empty-wishlist">
-                    <h3>Your Wishlist is Empty</h3>
-                    <p>You haven't added any cars to your wishlist yet.</p>
-                    <a href="cars.php">Browse Cars</a>
-                </div>
-            `;
-        }
-        
         // Header scroll effect
         const header = document.querySelector(".wheelbay-header");
+
         window.addEventListener("scroll", () => {
             if (window.scrollY > 50) {
                 header.classList.add("scrolled");
@@ -227,9 +183,54 @@ try {
                 header.classList.remove("scrolled");
             }
         });
-        
+
         function Social() {
             alert("This functionality coming soon!");
+        }
+
+        // Remove from wishlist functionality
+        function removeFromWishlist(carId, button) {
+            const card = button.closest('.wheelbay-card');
+            
+            fetch('remove_from_wishlist.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ car_id: carId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Remove the card from the DOM
+                    card.remove();
+                    
+                    // Check if wishlist is now empty
+                    if (document.querySelectorAll('.wheelbay-card').length === 0) {
+                        const carList = document.getElementById('car-list');
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.className = 'wishlist-empty';
+                        emptyMessage.innerHTML = `
+                            <p>Your wishlist is currently empty.</p>
+                            <p><a href="cars.php">Browse our collection</a> to add cars to your wishlist.</p>
+                        `;
+                        carList.appendChild(emptyMessage);
+                    }
+                    
+                    alert(data.message || "Car removed from wishlist!");
+                } else {
+                    alert(data.error || "An error occurred. Please try again.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("A network error occurred. Please check your connection and try again.");
+            });
         }
     </script>
 </body>

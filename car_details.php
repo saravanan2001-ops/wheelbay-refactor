@@ -315,11 +315,11 @@ try {
     <header class="wheelbay-header">
         <img class="wheelbay-logo" src="img/Logo01.png" alt="WheelBay Logo">
         <nav>
-            <a href="home.html">Home<span></span></a>
+            <a href="home.php">Home<span></span></a>
             <a href="cars.php">Cars<span></span></a>
-            <a href="wishlist.html">Wishlist<span></span></a>
-            <a href="about.html">About<span></span></a>
-            <a href="login.html">Login<span></span></a>
+            <a href="wishlist.php">Wishlist<span></span></a>
+            <a href="about.php">About<span></span></a>
+            <a href="login.php">Login<span></span></a>
         </nav>
     </header>
 
