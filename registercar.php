@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
         $transmission = $conn->real_escape_string(trim($_POST['transmission']));
         $color = $conn->real_escape_string(trim($_POST['color']));
         $price = (float)$_POST['price'];
-        $description = $conn->real_escape_string(trim($_POST['description']));
+        $description = $conn->real_escape_string(str_replace(["\r\n", "\n\r", "\r"], "\n", trim($_POST['description'])));
         $imagesString = implode(',', $uploadedImagePaths);
 
         // Insert into database
