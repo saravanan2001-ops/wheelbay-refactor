@@ -437,7 +437,7 @@ try {
             <a href="#" class="active">Dashboard</a>
             <a href="registercar.php">New Car</a>
         </div>
-        <a href="admin_logout.php" class="admin-logout">Logout <i class="fas fa-sign-out-alt"></i></a>
+        <a href="logout.php" class="admin-logout">Logout <i class="fas fa-sign-out-alt"></i></a>
     </header>
 
     <div class="admin-container">

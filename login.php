@@ -16,7 +16,7 @@ if (isset($_SESSION['registration_success'])) {
     unset($_SESSION['registration_success']);
     unset($_SESSION['registered_email']);
 } else {
-     $prefillEmail = '';
+    $prefillEmail = '';
 }
 
 // 2. Check if the form was submitted using the POST method
@@ -30,55 +30,85 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($email) || empty($password)) {
         $errorMessage = "Please enter both email and password.";
     } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-         $errorMessage = "Please enter a valid email address.";
+        $errorMessage = "Please enter a valid email address.";
     } else {
 
-        // 3. Authenticate User
-        // MODIFIED: Select more user data to store in the session
-        $sql = "SELECT id, password, first_name, last_name, email, profile_image FROM users WHERE email = ?";
-        $stmt = $conn->prepare($sql);
+        // --- MODIFIED LOGIC STARTS HERE ---
 
-        if ($stmt) {
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
+        // 1. First, try to authenticate as an ADMIN
+        $sql_admin = "SELECT id, email, password FROM admin WHERE email = ?";
+        $stmt_admin = $conn->prepare($sql_admin);
 
-            if ($user = $result->fetch_assoc()) {
-                // User found, now verify the password
-                $storedPasswordHash = $user['password'];
+        if ($stmt_admin) {
+            $stmt_admin->bind_param("s", $email);
+            $stmt_admin->execute();
+            $result_admin = $stmt_admin->get_result();
 
-                if (password_verify($password, $storedPasswordHash)) {
-                    // Password is correct - Login successful!
+            if ($admin = $result_admin->fetch_assoc()) {
+                // Admin email found, verify password
+                if ($password === $admin['password']) {
+                    // Admin login successful!
+                    
+                    // Set admin-specific session data
+                    $_SESSION['admin_id'] = $admin['id'];
+                    $_SESSION['admin_email'] = $admin['email'];
+                    $_SESSION['user_role'] = 'admin'; // Best practice to set a role
 
-                    // 4. Start Session and Store User Data
-                    // MODIFIED: Store the extra user data in the session
+                    // Redirect to the admin dashboard
+                    header("Location: admin.php");
+                    exit(); // IMPORTANT: Stop script execution
+                }
+            }
+            $stmt_admin->close();
+        } else {
+             // Log error but don't show to user
+            error_log("MySQL prepare error during admin login: " . $conn->error);
+            $errorMessage = "An internal error occurred. Please try again.";
+        }
+
+
+        // 2. If not an admin, try to authenticate as a USER
+        // This code only runs if the admin login above was not successful
+        $sql_user = "SELECT id, password, first_name, last_name, email, profile_image FROM users WHERE email = ?";
+        $stmt_user = $conn->prepare($sql_user);
+
+        if ($stmt_user) {
+            $stmt_user->bind_param("s", $email);
+            $stmt_user->execute();
+            $result_user = $stmt_user->get_result();
+
+            if ($user = $result_user->fetch_assoc()) {
+                // User email found, verify the password
+                if (password_verify($password, $user['password'])) {
+                    // User login successful!
+
+                    // Set user-specific session data
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['first_name'] = $user['first_name'];
                     $_SESSION['last_name'] = $user['last_name'];
                     $_SESSION['email'] = $user['email'];
-                    $_SESSION['profile_image'] = $user['profile_image']; // Can be NULL, that's okay
+                    $_SESSION['profile_image'] = $user['profile_image'];
+                    $_SESSION['user_role'] = 'user'; // Best practice to set a role
 
-                    // 5. Redirect to the user's dashboard or profile page
-                    header("Location: user.php"); // The user_id is now in the session, so no need to pass in URL
-                    exit();
+                    // Redirect to the cars page as requested
+                    header("Location: cars.php");
+                    exit(); // IMPORTANT: Stop script execution
 
-                } else {
-                    // Password does not match
-                    $errorMessage = "Invalid email or password.";
                 }
-            } else {
-                // No user found with that email
-                $errorMessage = "Invalid email or password.";
             }
-
-            $stmt->close();
-
+             $stmt_user->close();
         } else {
-            // Error preparing SQL statement
-            error_log("MySQL prepare error during login: " . $conn->error);
+            // Log error but don't show to user
+            error_log("MySQL prepare error during user login: " . $conn->error);
             $errorMessage = "An internal error occurred. Please try again.";
         }
 
+        // 3. If the script reaches this point, both checks have failed.
+        // Set the generic error message.
+        if (empty($errorMessage)) {
+            $errorMessage = "Invalid email or password.";
+        }
+        
         $conn->close();
     }
 }
