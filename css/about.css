@@ -1,0 +1,201 @@
+
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .wheelbay-body {
+            background-color: black;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .wheelbay-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .wheelbay-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            height: 80px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .wheelbay-logo {
+            width: 120px;
+            transition: transform 0.3s;
+        }
+
+        .wheelbay-logo:hover {
+            transform: scale(1.1);
+        }
+
+        nav a {
+            position: relative;
+            font-size: 1.1em;
+            color: #fff;
+            text-decoration: none;
+            padding: 6px 20px;
+            transition: .5s;
+        }
+
+        nav a:hover {
+            color: #0ef;
+        }
+
+        nav a span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            border-bottom: 2px solid #0ef;
+            border-radius: 15px;
+            transform: scale(0) translateY(50px);
+            opacity: 0;
+            transition: .5s;
+        }
+
+        nav a:hover span {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .wheelbay-main {
+            padding: 40px 25px;
+        }
+
+        .wheelbay-heading {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #17fee3;
+        }
+
+        .wheelbay-greeting {
+            text-align: center;
+            font-size: 4em;
+            margin-bottom: 30px;
+            color: #17fee3;
+        }
+
+        .wheelbay-about-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .wheelbay-about-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #17fee3;
+        }
+
+        .wheelbay-about-section p {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .wheelbay-team {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .wheelbay-team-member {
+            text-align: center;
+            padding: 20px;
+            background: #1f1f1f;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .wheelbay-team-member:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .wheelbay-team-member img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .wheelbay-team-member h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .wheelbay-team-member p {
+            font-size: 0.95em;
+            color: #ccc;
+        }
+
+        .wheelbay-footer {
+            background-color: #1f1f1f;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .wheelbay-footer p {
+            margin: 0;
+        }
+
+        .wheelbay-social-links {
+            margin-top: 20px;
+        }
+
+        .wheelbay-social-links a {
+            margin: 0 10px;
+            font-size: 1.5em;
+            color: #17fee3;
+            transition: color 0.3s;
+        }
+
+        .wheelbay-social-links a:hover {
+            color: #14d3c3;
+        }
+
+        .wheelbay-social-links img {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .wheelbay-social-links a:hover img {
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 768px) {
+            .wheelbay-banner-col h1 {
+                font-size: 60px;
+            }
+
+            .wheelbay-banner-col h1.wheelbay-blue {
+                font-size: 60px;
+            }
+        }
