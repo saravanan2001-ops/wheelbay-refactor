@@ -1,0 +1,574 @@
+
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .wheelbay-body {
+            background-color: black;
+            color: white;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .wheelbay-header {
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            height: 80px;
+        }
+        .wheelbay-header.scrolled {
+            background-color: rgba(18, 18, 18, 0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheelbay-logo {
+            width: 120px;
+            transition: transform 0.3s;
+        }
+
+        .wheelbay-logo:hover {
+            transform: scale(1.1);
+        }
+
+        nav a {
+            position: relative;
+            font-size: 1.1em;
+            color: #fff;
+            text-decoration: none;
+            padding: 6px 20px;
+            transition: .5s;
+        }
+
+        nav a:hover {
+            color: #0ef;
+        }
+
+        nav a span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            border-bottom: 2px solid #0ef;
+            border-radius: 15px;
+            transform: scale(0) translateY(50px);
+            opacity: 0;
+            transition: .5s;
+        }
+
+        nav a:hover span {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .wheelbay-main {
+            padding: 0px 10px;
+            margin-top: 20px;
+        }
+
+        .filter-section {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-container label {
+            color: #17fee3;
+            font-weight: bold;
+        }
+
+        .filter-container select {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            background-color: #262c37;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filter-container select:focus {
+            outline: 2px solid #17fee3;
+        }
+
+        .search-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .search-container {
+            position: relative;
+            display: inline-block;
+            background: #262c37;
+            transition: .5s;
+            transition-delay: .8s;
+            padding: 10px 50px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-container:hover {
+            transition-delay: 1ms;
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            background: transparent;
+            color: rgba(255, 255, 255, .4);
+            font-size: 1.5em;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-container:hover input {
+            color: var(--clr);
+            letter-spacing: 0.25em;
+            text-shadow: 0 0 5px var(--clr);
+        }
+
+        .search-container span {
+            position: absolute;
+            display: block;
+            background: var(--clr);
+            box-shadow: 0 0 5px var(--clr);
+        }
+
+        .search-container span:nth-child(1) {
+            left: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform .5s;
+        }
+
+        .search-container:hover span:nth-child(1) {
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+
+        .search-container span:nth-child(2) {
+            right: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: right;
+            transform: scaleX(0);
+            transition: transform .5s;
+        }
+
+        .search-container:hover span:nth-child(2) {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .search-container span:nth-child(3) {
+            right: 0;
+            top: 0;
+            width: 1.5px;
+            height: 100%;
+            transform-origin: bottom;
+            transform: scaleY(0);
+            transition: transform .5s;
+            transition-delay: .4s;
+        }
+
+        .search-container:hover span:nth-child(3) {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        .search-container span:nth-child(4) {
+            left: 0;
+            top: 0;
+            width: 1.5px;
+            height: 100%;
+            transform-origin: bottom;
+            transform: scaleY(0);
+            transition: transform .5s;
+            transition-delay: .4s;
+        }
+
+        .search-container:hover span:nth-child(4) {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        .search-container span:nth-child(5) {
+            left: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: right;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transition-delay: .8s;
+        }
+
+        .search-container:hover span:nth-child(5) {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .search-container span:nth-child(6) {
+            right: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transition-delay: .8s;
+        }
+
+        .search-container:hover span:nth-child(6) {
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+
+        .wheelbay-heading {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #17fee3;
+        }
+
+        .wheelbay-car-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 25px;
+        }
+
+        .wheelbay-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: #1f1f1f;
+            text-align: center;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .wheelbay-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .wheelbay-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .wheelbay-card h3 {
+            margin: 15px 0;
+            font-size: 1.5em;
+        }
+
+        .wheelbay-card p {
+            margin: 10px 0;
+            font-size: 0.95em;
+        }
+
+        .wheelbay-card-features {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .wheelbay-card-features .feature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            color: #17fee3;
+            margin: 5px;
+            min-width: 80px;
+        }
+
+        .wheelbay-card-features .feature .label {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        .wheelbay-offer {
+            color: #17fee3;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 15px;
+        }
+
+        .additional-details {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .detail-item {
+            background-color: #262c37;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            margin: 5px;
+        }
+
+        .detail-label {
+            color: #aaa;
+            font-size: 0.8em;
+        }
+
+        .detail-value {
+            color: #17fee3;
+            font-weight: bold;
+        }
+
+        .wheelbay-banner-button {
+            position: relative;
+            display: inline-block;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1em;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            text-transform: uppercase;
+            background: #262c37;
+            padding: 10px 20px;
+            transition: 0.5s;
+            transition-delay: 0.8s;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .wheelbay-banner-button:hover {
+            color: var(--clr);
+            letter-spacing: 0.25em;
+            text-shadow: 0 0 5px var(--clr);
+            transition-delay: 1ms;
+        }
+
+        .wheelbay-banner-button span {
+            position: absolute;
+            display: block;
+            background: var(--clr);
+            box-shadow: 0 0 5px var(--clr);
+        }
+
+        .wheelbay-banner-button span:nth-child(1) {
+            left: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform 0.5s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(1) {
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+
+        .wheelbay-banner-button span:nth-child(2) {
+            right: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: right;
+            transform: scaleX(0);
+            transition: transform 0.5s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(2) {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .wheelbay-banner-button span:nth-child(3) {
+            right: 0;
+            top: 0;
+            width: 1.5px;
+            height: 100%;
+            transform-origin: bottom;
+            transform: scaleY(0);
+            transition: transform 0.5s;
+            transition-delay: 0.4s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(3) {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        .wheelbay-banner-button span:nth-child(4) {
+            left: 0;
+            top: 0;
+            width: 1.5px;
+            height: 100%;
+            transform-origin: bottom;
+            transform: scaleY(0);
+            transition: transform 0.5s;
+            transition-delay: 0.4s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(4) {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        .wheelbay-banner-button span:nth-child(5) {
+            left: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: right;
+            transform: scaleX(0);
+            transition: transform 0.5s;
+            transition-delay: 0.8s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(5) {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .wheelbay-banner-button span:nth-child(6) {
+            right: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform 0.5s;
+            transition-delay: 0.8s;
+        }
+
+        .wheelbay-banner-button:hover span:nth-child(6) {
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+
+        .wheelbay-card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .wheelbay-wishlist-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .wheelbay-wishlist-button:hover {
+            color: #17fee3;
+        }
+
+        .wheelbay-wishlist-button .fa-heart {
+            transition: transform 0.3s ease;
+        }
+
+        .wheelbay-wishlist-button:hover .fa-heart {
+            transform: scale(1.2);
+        }
+
+        .wheelbay-wishlist-button .fas {
+            color: #17fee3;
+        }
+
+        .wheelbay-footer {
+            background-color: #1f1f1f;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .wheelbay-footer p {
+            margin: 0;
+        }
+
+        .wheelbay-social-links {
+            margin-top: 20px;
+        }
+
+        .wheelbay-social-links a {
+            margin: 0 10px;
+            font-size: 1.5em;
+            color: #17fee3;
+            transition: color 0.3s;
+        }
+
+        .wheelbay-social-links a:hover {
+            color: #14d3c3;
+        }
+
+        .wheelbay-social-links img {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .wheelbay-social-links a:hover img {
+            transform: scale(1.2);
+        }
+
+        .no-cars-message {
+            text-align: center;
+            grid-column: 1 / -1;
+            font-size: 1.5em;
+            color: #17fee3;
+            padding: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .wheelbay-car-list {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+            
+            .filter-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .wheelbay-card-features .feature {
+                min-width: 70px;
+            }
+        }

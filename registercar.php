@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
     $conn->set_charset("utf8mb4");
 
     // File upload handling
-    $uploadDir = 'uploads/car_images';
+    $uploadDir = 'uploads/car_images/';  // Added trailing slash here
     $uploadedImagePaths = [];
     $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
     $maxFileSize = 5 * 1024 * 1024; // 5 MB
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
                 }
 
                 $newFileName = uniqid('car_', true) . '.' . $fileType;
-                $destPath = $uploadDir . $newFileName;
+                $destPath = $uploadDir . $newFileName;  // Correct path concatenation
 
                 if (move_uploaded_file($fileTmpPath, $destPath)) {
                     $uploadedImagePaths[] = $newFileName;
@@ -125,60 +125,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
             line-height: 1.6;
         }
 
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
+        .admin-header {
+            background-color: #1a1a1a;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 25px;
-            height: 80px;
-            background-color: rgba(18, 18, 18, 0.9);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .logo {
-            width: 120px;
-            transition: transform 0.3s;
+        .admin-title {
+            font-size: 1.8em;
+            color: #17fee3;
         }
 
-        .logo:hover {
-            transform: scale(1.05);
+        .admin-nav {
+            display: flex;
+            gap: 20px;
         }
 
-        nav a {
-            position: relative;
-            font-size: 1.1em;
-            color: #fff;
+        .admin-nav a {
+            color: white;
             text-decoration: none;
-            padding: 6px 20px;
-            transition: 0.5s;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
         }
 
-        nav a:hover {
-            color: #0ef;
+        .admin-nav a:hover, .admin-nav a.active {
+            background-color: #17fee3;
+            color: #121212;
         }
 
-        nav a span {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            border-bottom: 2px solid #0ef;
-            border-radius: 15px;
-            transform: scale(0) translateY(50px);
-            opacity: 0;
-            transition: .5s;
-        }
-
-        nav a:hover span {
-            transform: scale(1) translateY(0);
-            opacity: 1;
+        .admin-logout {
+            color: #ff3333;
+            text-decoration: none;
+            font-weight: bold;
         }
 
         .container {
@@ -369,15 +351,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
     </style>
 </head>
 <body>
-    <header>
-        <img class="logo" src="img/Logo01.png" alt="WheelBay Logo">
-        <nav>
-            <a href="home.html">Home<span></span></a>
-            <a href="cars.html">Cars<span></span></a>
-            <a href="wishlist.html">Wishlist<span></span></a>
-            <a href="about.html">About<span></span></a>
-            <a href="login.html">Login<span></span></a>
-        </nav>
+    <header class="admin-header">
+        <h1 class="admin-title">WheelBay Admin Panel</h1>
+        <div class="admin-nav">
+            <a href="admin.php">Dashboard</a>
+            <a href="registercar.php"  class="active" >New Car</a>
+        </div>
+        <a href="#" class="admin-logout">Logout <i class="fas fa-sign-out-alt"></i></a>
     </header>
 
     <div class="container">
