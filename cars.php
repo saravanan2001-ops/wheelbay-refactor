@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 // Database connection
 $host = 'localhost';
 $dbname = 'wheelbay';
@@ -13,6 +15,14 @@ try {
     $stmt = $conn->prepare("SELECT * FROM cars");
     $stmt->execute();
     $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Check which cars are in wishlist for logged in user
+    $wishlistItems = [];
+    if (isset($_SESSION['user_id'])) {
+        $stmt = $conn->prepare("SELECT car_id FROM wishlist WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $wishlistItems = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
     
 } catch(PDOException $e) {
     $cars = [];
@@ -169,8 +179,9 @@ try {
                                 <span></span>
                                 View Details
                             </a>
-                            <button class="wheelbay-wishlist-button" onclick="addToWishlist(<?php echo $car['id']; ?>, this)">
-                                <ion-icon name="heart-outline"></ion-icon>
+                            <button class="wheelbay-wishlist-button" onclick="addToWishlist(<?php echo $car['id']; ?>, this)"
+                                    data-in-wishlist="<?php echo in_array($car['id'], $wishlistItems) ? 'true' : 'false'; ?>">
+                                <ion-icon name="<?php echo in_array($car['id'], $wishlistItems) ? 'heart' : 'heart-outline'; ?>"></ion-icon>
                             </button>
                         </div>
                     </div>
