@@ -14,13 +14,17 @@ session_start();
 </head>
 <body class="wheelbay-body">
     <header class="wheelbay-header" id="header">
-        <img class="wheelbay-logo" id="logo" src="css/img/Logo01.png" alt="WheelBay Logo">
+        <img class="wheelbay-logo" id="logo" src="img/Logo01.png" alt="WheelBay Logo">
         <nav>
             <a href="home.php">Home<span></span></a>
             <a href="cars.php">Cars<span></span></a>
             <a href="wishlist.php">Wishlist<span></span></a>
             <a href="about.php">About<span></span></a>
-            <a href="login.php">Login<span></span></a>
+            <?php if (isset($_SESSION['email']) || isset($_SESSION['admin_email'])): ?>
+                <a href="user.php">Profile</a>
+            <?php else: ?>
+                <a href="login.php">Login</a>
+            <?php endif; ?>
         </nav>
     </header>
 
@@ -29,11 +33,12 @@ session_start();
 
             <h1 class="wheelbay-greeting">
             <?php
-            if (isset($_SESSION['username'])) {
-                echo "Welcome, " . htmlspecialchars($_SESSION['username']) . "!";
-            } else {
-                echo "Welcome, Guest!";
-            }
+                if (isset($_SESSION['user_id']) && !isset($_SESSION['admin_id'])) {
+                    $username = $_SESSION['first_name'] ?? $_SESSION['email'] ?? 'User';
+                    echo "Welcome, " . htmlspecialchars($username) . "!";
+                } elseif (!isset($_SESSION['user_id']) && !isset($_SESSION['admin_id'])) {
+                    echo "Welcome, Guest!";
+                }
             ?>
             </h1>
 

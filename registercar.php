@@ -357,7 +357,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_car'])) {
             <a href="admin.php">Dashboard</a>
             <a href="registercar.php"  class="active" >New Car</a>
         </div>
-        <a href="#" class="admin-logout">Logout <i class="fas fa-sign-out-alt"></i></a>
+        <a href="logout.php" class="admin-logout">Logout <i class="fas fa-sign-out-alt"></i></a>
     </header>
 
     <div class="container">

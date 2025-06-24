@@ -66,7 +66,11 @@ try {
             <a href="cars.php">Cars<span></span></a>
             <a href="wishlist.php">Wishlist<span></span></a>
             <a href="about.php">About<span></span></a>
-            <a href="login.php">Login<span></span></a>
+            <?php if (isset($_SESSION['email']) || isset($_SESSION['admin_email'])): ?>
+                <a href="user.php">Profile</a>
+            <?php else: ?>
+                <a href="login.php">Login</a>
+            <?php endif; ?>
         </nav>
     </header>
 
@@ -260,7 +264,7 @@ try {
         .catch(error => {
             // CATCH: Network error or JSON parsing error
             console.error('Error:', error);
-            alert("A network error occurred. Please check your connection and try again.");
+            alert("Please Login or Please check your connection and try again.");
             // Do NOT change the icon
         });
     }

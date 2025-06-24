@@ -1,6 +1,6 @@
 <?php
 session_start();
-$loggedInUserId = $_SESSION['user_id'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -516,11 +516,11 @@ $loggedInUserId = $_SESSION['user_id'];
             <a href="cars.php">Cars<span></span></a>
             <a href="wishlist.php">Wishlist<span></span></a>
             <a href="about.php">About<span></span></a>
-            <?php if(isset($_SESSION['username'])): ?>
-                        <a href="logout.php">Logout</a>
-                    <?php else: ?>
-                        <a href="login.php">Login</a>
-                    <?php endif; ?>
+            <?php if (isset($_SESSION['user_id']) || isset($_SESSION['admin_id'])): ?>
+            <a href="user.php">Profile<span></span></a>
+                <?php else: ?>
+                    <a href="login.php">Login<span></span></a>
+                <?php endif; ?>
             </nav>
         </header>
 
@@ -530,7 +530,6 @@ $loggedInUserId = $_SESSION['user_id'];
                 <h1 class="wheelbay-blue">WheelBay</h1>
                 <div>
                     <button class="wheelbay-banner-button" onclick="buyCar()">BUY</button>
-                    <button class="wheelbay-banner-button" onclick="sellCar()">SELL</button>
                 </div>
             </div>
         </div>
@@ -591,7 +590,7 @@ $loggedInUserId = $_SESSION['user_id'];
                     <div class="wheelbay-step">
                         <div class="wheelbay-step-number">2</div>
                         <h3>Connect</h3>
-                        <p>Get in touch with sellers or buyers through our secure messaging system.</p>
+                        <p>Get in touch with cars through our secure system.</p>
                     </div>
                     <div class="wheelbay-step">
                         <div class="wheelbay-step-number">3</div>
@@ -694,7 +693,7 @@ $loggedInUserId = $_SESSION['user_id'];
                             <ion-icon name="star"></ion-icon>
                             <ion-icon name="star-half"></ion-icon>
                         </div>
-                        <p>"Great experience selling my car through WheelBay. Highly recommend their services!"</p>
+                        <p>"Great experience buying my dream car through WheelBay. Highly recommend their services!"</p>
                     </div>
 
                     <!-- 5-star rating -->
@@ -750,7 +749,7 @@ $loggedInUserId = $_SESSION['user_id'];
                             <ion-icon name="star"></ion-icon>
                             <ion-icon name="star-half"></ion-icon>
                         </div>
-                        <p>"WheelBay is my go-to platform for buying and selling cars. Highly reliable!"</p>
+                        <p>"WheelBay is my go-to platform for buying cars. Highly reliable!"</p>
                     </div>
                 </div>
             </section>
@@ -789,11 +788,7 @@ $loggedInUserId = $_SESSION['user_id'];
         });
 
         function buyCar() {
-            window.location.href = "cars.html";
-        }
-
-        function sellCar() {
-            window.location.href = "login.html";
+            window.location.href = "cars.php";
         }
 
         function Social() {
