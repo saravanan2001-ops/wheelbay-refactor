@@ -3,9 +3,16 @@
 session_start();
 
 // Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php?error=not_logged_in");
+    exit();
+}
+
+// Set headers to prevent caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+
 // Include the database connection file
 require_once 'php/db_conn.php';
 
@@ -28,6 +35,110 @@ $userType = "Online";
 $rawDob = ''; // To populate the date input in the edit modal
 $rawLicenseExpiry = ''; // To populate the date input in the edit modal
 
+
+// Handle form submission for profile updates
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Collect and sanitize form data
+    $firstName = trim($_POST['first_name']);
+    $lastName = trim($_POST['last_name']);
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);
+    $dob = trim($_POST['dob']);
+    $houseNo = trim($_POST['house_no']);
+    $street = trim($_POST['street']);
+    $city = trim($_POST['city']);
+    $state = trim($_POST['state']);
+    $country = trim($_POST['country']);
+    $zipCode = trim($_POST['zip_code']);
+    $licenseNumber = trim($_POST['license_number']);
+    $licenseCountry = trim($_POST['license_country']);
+    $licenseExpiry = trim($_POST['license_expiry']);
+    
+    // Initialize profile image path with existing value
+    $profileImagePath = $user['profile_image'] ?? null;
+    
+    // Handle file upload if a new image was provided
+    if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = 'uploads/profile_images/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        // Generate unique filename
+        $fileExt = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid('profile_') . '.' . $fileExt;
+        $targetPath = $uploadDir . $fileName;
+        
+        // Check if image file is an actual image
+        $check = getimagesize($_FILES['profile_image']['tmp_name']);
+        if ($check !== false) {
+            if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $targetPath)) {
+                $profileImagePath = $targetPath;
+                
+                // Delete old profile image if it exists and is not the default
+                if (!empty($user['profile_image']) && $user['profile_image'] !== 'img/default-user.jpg' && file_exists($user['profile_image'])) {
+                    unlink($user['profile_image']);
+                }
+            }
+        }
+    }
+    
+    // Prepare the SQL update statement
+    $sql = "UPDATE users SET 
+            first_name = ?, 
+            last_name = ?, 
+            email = ?, 
+            phone = ?, 
+            dob = ?, 
+            house_no = ?, 
+            street = ?, 
+            city = ?, 
+            state = ?, 
+            country = ?, 
+            zip_code = ?, 
+            license_number = ?, 
+            license_country = ?, 
+            license_expiry = ?,
+            profile_image = ?,
+            updated_at = NOW()
+            WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($stmt) {
+        // Bind parameters
+        $stmt->bind_param("sssssssssssssssi", 
+            $firstName, 
+            $lastName, 
+            $email, 
+            $phone, 
+            $dob, 
+            $houseNo, 
+            $street, 
+            $city, 
+            $state, 
+            $country, 
+            $zipCode, 
+            $licenseNumber, 
+            $licenseCountry, 
+            $licenseExpiry,
+            $profileImagePath,
+            $loggedInUserId);
+        
+        if ($stmt->execute()) {
+            // Success - reload the page to show updated data
+            header("Location: user.php?success=1");
+            exit();
+        } else {
+            // Error
+            $error = "Failed to update profile. Please try again. Error: " . $stmt->error;
+        }
+        $stmt->close();
+    } else {
+        $error = "Database error. Please try again. Error: " . $conn->error;
+    }
+}
+
 // Fetch User Data from the Database
 $sql = "SELECT first_name, last_name, email, phone, dob, house_no, street, city, state, country, zip_code, license_number, license_country, license_expiry, profile_image FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
@@ -44,8 +155,6 @@ if ($stmt) {
         $fullName = $firstName . ' ' . $lastName;
         $email = htmlspecialchars($user['email']);
 
-}
-
         // Combine address parts for general location display
         $locationParts = [];
         if (!empty($user['city'])) $locationParts[] = htmlspecialchars($user['city']);
@@ -53,7 +162,6 @@ if ($stmt) {
         if (!empty($user['country'])) $locationParts[] = htmlspecialchars($user['country']);
         $location = implode(', ', $locationParts);
 
-        
         // Set default image path
         $profileImage = "img/default-user.jpg";
 
@@ -98,7 +206,7 @@ if ($stmt) {
         exit();
     }
     $stmt->close();
- 
+}
 
 $conn->close(); // Close the database connection
 ?>
@@ -111,577 +219,8 @@ $conn->close(); // Close the database connection
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    <link rel="stylesheet" href="css/user.css">
 
-        /* General styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .wheelbay-body {
-            background-color: #121212;
-            color: white;
-            margin: 0;
-            line-height: 1.6;
-        }
-
-        /* Header and navigation bar */
-        .wheelbay-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-            height: 80px;
-            transition: all 0.3s ease;
-        }
-        .wheelbay-header.scrolled {
-            background-color: rgba(18, 18, 18, 0.95);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            height: 70px;
-        }
-
-        .wheelbay-logo {
-            width: 120px;
-            transition: transform 0.3s;
-        }
-
-        .wheelbay-logo:hover {
-            transform: scale(1.1);
-        }
-
-        /* Navigation links with hover effect */
-        nav a {
-            position: relative;
-            font-size: 1.1em;
-            color: #fff;
-            text-decoration: none;
-            padding: 6px 20px;
-            transition: .5s;
-        }
-
-        nav a:hover {
-            color: #0ef;
-        }
-
-        nav a span {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            border-bottom: 2px solid #0ef;
-            border-radius: 15px;
-            transform: scale(0) translateY(50px);
-            opacity: 0;
-            transition: .5s;
-        }
-
-        nav a:hover span {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-        }
-
-        /* Main content */
-        .wheelbay-main {
-            padding: 40px;
-            margin-top: 100px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Profile Section */
-        .profile-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .profile-picture {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #0ef;
-            margin-bottom: 25px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 238, 255, 0.3);
-        }
-
-        .profile-picture:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 238, 255, 0.5);
-        }
-
-        .profile-info h2 {
-            font-size: 2.2em;
-            margin-bottom: 10px;
-            color: #0ef;
-        }
-
-        .profile-info p {
-            font-size: 1.1em;
-            color: #ccc;
-            margin-bottom: 5px;
-        }
-
-        .profile-stats {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 25px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px 25px;
-            border-radius: 10px;
-            min-width: 120px;
-            transition: transform 0.3s, background 0.3s;
-            cursor: pointer;
-        }
-
-        .stat-item:hover {
-            background: rgba(0, 238, 255, 0.2);
-            transform: translateY(-5px);
-        }
-
-        .stat-item i {
-            font-size: 1.8em;
-            color: #0ef;
-            margin-bottom: 10px;
-        }
-
-        .stat-item .stat-number {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: white;
-        }
-
-        .stat-item .stat-label {
-            font-size: 0.9em;
-            color: #aaa;
-        }
-
-        /* Profile Details Section */
-        .profile-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-
-        .detail-card {
-            background: #1f1f1f;
-            border-radius: 15px;
-            padding: 25px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .detail-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .detail-card h3 {
-            color: #0ef;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .detail-card h3 i {
-            font-size: 1.2em;
-        }
-
-        .detail-item {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .detail-item i {
-            color: #0ef;
-            margin-right: 15px;
-            margin-top: 3px;
-            font-size: 1.1em;
-        }
-
-        .detail-item .detail-label {
-            color: #aaa;
-            font-size: 0.95em;
-            margin-bottom: 3px;
-        }
-
-        .detail-item .detail-value {
-            color: white;
-            font-size: 1.05em;
-        }
-
-        /* Edit Profile Button */
-        .edit-profile-btn {
-            background: linear-gradient(45deg, #00d2ff, #0ef);
-            color: black;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 30px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .edit-profile-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 238, 255, 0.4);
-        }
-
-        /* Recent Activity */
-        .activity-list {
-            margin-top: 20px;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-            transition: all 0.3s;
-        }
-
-        .activity-item:hover {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 12px 15px;
-            margin: 0 -15px;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 238, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            color: #0ef;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-text {
-            color: white;
-            font-size: 0.95em;
-        }
-
-        .activity-time {
-            color: #aaa;
-            font-size: 0.8em;
-            margin-top: 3px;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-        }
-
-        .modal-content {
-            background-color: #1f1f1f;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 600px;
-            max-height: 80vh; /* Limit height to 80% of viewport */
-            overflow-y: auto; /* Enable vertical scrolling */
-            position: relative;
-            animation: modalopen 0.5s;
-        }
-
-        .modal-form {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            min-height: min-content; /* Ensure form can grow as needed */
-        }
-        @keyframes modalopen {
-            from {opacity: 0; transform: translateY(-50px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-
-        .close-modal {
-            position: absolute;
-            right: 25px;
-            top: 15px;
-            font-size: 28px;
-            color: #aaa;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .close-modal:hover {
-            color: #0ef;
-        }
-
-        .modal h2 {
-            color: #0ef;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .modal-form-group {
-            margin-bottom: 15px;
-        }
-
-        .modal-form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #0ef;
-        }
-
-        .modal-form-group input,
-        .modal-form-group select,
-        .modal-form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: none;
-            background-color: #262626;
-            color: white;
-            font-size: 1em;
-        }
-
-        .modal-form-group input:focus,
-        .modal-form-group select:focus,
-        .modal-form-group textarea:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px #0ef;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .modal-btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .modal-btn-primary {
-            background: #0ef;
-            color: black;
-            border: none;
-            font-weight: 600;
-        }
-
-        .modal-btn-primary:hover {
-            background: #0bd6c2;
-        }
-
-        .modal-btn-secondary {
-            background: transparent;
-            color: #0ef;
-            border: 1px solid #0ef;
-        }
-
-        .modal-btn-secondary:hover {
-            background: rgba(0, 238, 255, 0.1);
-        }
-
-        /* Verification Badge */
-        .verification-badge {
-            display: inline-flex;
-            align-items: center;
-            background: rgba(0, 238, 255, 0.1);
-            color: #0ef;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            margin-left: 10px;
-        }
-
-        .verification-badge i {
-            margin-right: 5px;
-        }
-
-        /* Hidden file input */
-        #profile-image-input {
-            display: none;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .wheelbay-header {
-                padding: 0 15px;
-            }
-            
-            nav a {
-                padding: 6px 12px;
-                font-size: 1em;
-            }
-            
-            .wheelbay-main {
-                padding: 20px;
-                margin-top: 80px;
-            }
-            
-            .profile-stats {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .profile-details {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                width: 90%;
-                margin: 10% auto; /* Reduced from 20% to give more space */
-                max-height: 85vh; /* Slightly more height on mobile */
-            }
-        }
-        .wheelbay-footer {
-            background-color: #1f1f1f;
-            color: white;
-            text-align: center;
-            padding: 40px 20px;
-            margin-top: 40px;
-        }
-
-        .wheelbay-footer p {
-            margin: 0;
-        }
-
-        /* Specific CSS for social links */
-        .wheelbay-social-links {
-            margin-top: 20px;
-        }
-
-        .wheelbay-social-links a {
-            margin: 0 10px;
-            font-size: 1.5em;
-            color: #17fee3;
-            transition: color 0.3s;
-        }
-
-        .wheelbay-social-links a:hover {
-            color: #14d3c3;
-        }
-
-        .wheelbay-social-links img {
-            width: 24px;
-            height: 24px;
-            transition: transform 0.3s ease;
-        }
-
-        .wheelbay-social-links a:hover img {
-            transform: scale(1.2);
-        }
-        /* Three-column layout for profile details */
-        .profile-details-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-        
-        .info-section {
-            background: #1f1f1f;
-            border-radius: 15px;
-            padding: 25px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .info-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .info-section h3 {
-            color: #0ef;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-        
-        .info-section h3 i {
-            font-size: 1.2em;
-        }
-        
-        .info-item {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-        }
-        
-        .info-item i {
-            color: #0ef;
-            margin-right: 15px;
-            margin-top: 3px;
-            font-size: 1.1em;
-            min-width: 20px;
-        }
-        
-        .info-item .info-label {
-            color: #aaa;
-            font-size: 0.95em;
-            margin-bottom: 3px;
-        }
-        
-        .info-item .info-value {
-            color: white;
-            font-size: 1.05em;
-            word-break: break-word;
-        }
-        
-        .not-provided {
-            color: #777;
-            font-style: italic;
-        }
-    </style>
 </head>
 <body class="wheelbay-body">
     <!-- Header with logo and navigation -->
@@ -702,10 +241,22 @@ $conn->close(); // Close the database connection
 
     <!-- Main content -->
     <main class="wheelbay-main">
+        <?php if (isset($_GET['success'])): ?>
+            <div class="success-message">
+                Profile updated successfully!
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($error)): ?>
+            <div class="error-message" style="color: red; margin-bottom: 20px;">
+                <?php echo $error; ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Profile Section -->
         <section class="profile-section">
             <img src="<?php echo $profileImage; ?>" alt="Profile Picture" class="profile-picture" id="profile-picture">
-            <input type="file" id="profile-image-input" accept="uploads/profile_images/**">
+            <input type="file" id="profile-image-input" accept="image/*">
             <div class="profile-info">
                 <h2><?php echo $fullName; ?> <span class="verification-badge"><i class="fas fa-check-circle"></i><?php echo $userType; ?></span></h2>
                 <p><i class="fas fa-envelope"></i> <?php echo $email; ?></p>
@@ -859,10 +410,8 @@ $conn->close(); // Close the database connection
                         <div class="info-value"><?php echo $displayLicenseExpiry !== 'N/A' ? $displayLicenseExpiry : '<span class="not-provided">Not provided</span>'; ?></div>
                     </div>
                 </div>
-
             </div>
         </div>
-
 
         <!-- Edit Profile Button -->
         <button class="edit-profile-btn" onclick="openEditModal()">
@@ -880,15 +429,15 @@ $conn->close(); // Close the database connection
 
                 <div class="modal-form-group">
                     <label for="edit-first-name">First Name</label>
-                    <input type="text" id="edit-first-name" name="first_name" value="<?php echo $firstName; ?>">
+                    <input type="text" id="edit-first-name" name="first_name" value="<?php echo $firstName; ?>" required>
                 </div>
                 <div class="modal-form-group">
                     <label for="edit-last-name">Last Name</label>
-                    <input type="text" id="edit-last-name" name="last_name" value="<?php echo $lastName; ?>">
+                    <input type="text" id="edit-last-name" name="last_name" value="<?php echo $lastName; ?>" required>
                 </div>
                 <div class="modal-form-group">
                     <label for="edit-email">Email</label>
-                    <input type="email" id="edit-email" name="email" value="<?php echo $email; ?>">
+                    <input type="email" id="edit-email" name="email" value="<?php echo $email; ?>" required>
                 </div>
                 <div class="modal-form-group">
                     <label for="edit-phone">Phone</label>

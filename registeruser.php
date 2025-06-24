@@ -48,6 +48,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // ...
 
+    // **ADDED VALIDATION: START**
+
+    // **ADDED VALIDATION: START - Validate Date of Birth**
+    if (empty($dob)) {
+        $errors['dob'] = 'Date of birth is required.';
+    } else {
+        try {
+            $dobDateTime = new DateTime($dob);
+            $today = new DateTime('today');
+            
+            // Calculate the date 18 years ago from today
+            $minAgeDate = (new DateTime('today'))->sub(new DateInterval('P18Y'));
+            
+            if ($dobDateTime > $today) {
+                $errors['dob'] = 'Date of birth cannot be in the future.';
+            } elseif ($dobDateTime > $minAgeDate) {
+                $errors['dob'] = 'You must be at least 18 years old to register.';
+            }
+        } catch (Exception $e) {
+            $errors['dob'] = 'Invalid date format for Date of Birth.';
+        }
+    }
+    // Validate License Expiry Date
+    if (!empty($licenseNumber) && empty($licenseExpiry)) {
+        $errors['license_expiry'] = 'License expiry date is required if license number is provided.';
+    } elseif (!empty($licenseExpiry)) {
+        try {
+            $expiryDateTime = new DateTime($licenseExpiry);
+            $today = new DateTime('today');
+            if ($expiryDateTime <= $today) {
+                $errors['license_expiry'] = 'License expiry date must be in the future.';
+            }
+        } catch (Exception $e) {
+            $errors['license_expiry'] = 'Invalid date format for license expiry.';
+        }
+    }
+    // **ADDED VALIDATION: END**
+
     // Handle file upload
     $profileImagePath = null;
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
@@ -820,7 +858,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="address-grid">
                         <div class="form-group"><label for="license-number">License Number</label><input type="text" id="license-number" name="license_number" value="<?php echo isset($_POST['license_number']) ? htmlspecialchars($_POST['license_number']) : ''; ?>"></div>
                         <div class="form-group"><label for="license-country">Issuing Country</label><select id="license-country" name="license_country"><option value="">Select Country</option><option value="US" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'US') ? 'selected' : ''; ?>>United States</option><option value="UK" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'UK') ? 'selected' : ''; ?>>United Kingdom</option><option value="CA" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'CA') ? 'selected' : ''; ?>>Canada</option><option value="AU" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'AU') ? 'selected' : ''; ?>>Australia</option><option value="LK" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'LK') ? 'selected' : ''; ?>>Sri Lanka</option><option value="IN" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'IN') ? 'selected' : ''; ?>>India</option><option value="JP" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'JP') ? 'selected' : ''; ?>>Japan</option><option value="DE" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'DE') ? 'selected' : ''; ?>>Germany</option><option value="FR" <?php echo (isset($_POST['license_country']) && $_POST['license_country'] == 'FR') ? 'selected' : ''; ?>>France</option></select></div>
-                        <div class="form-group"><label for="license-expiry">Expiry Date</label><input type="date" id="license-expiry" name="license_expiry" value="<?php echo isset($_POST['license_expiry']) ? htmlspecialchars($_POST['license_expiry']) : ''; ?>"></div>
+                        <div class="form-group">
+                            <label for="license-expiry">Expiry Date</label>
+                            <input type="date" id="license-expiry" name="license_expiry" value="<?php echo isset($_POST['license_expiry']) ? htmlspecialchars($_POST['license_expiry']) : ''; ?>">
+                            <!-- **ADDED VALIDATION: START** -->
+                            <div class="error-message" id="license-expiry-error" style="<?php if (!empty($errors['license_expiry'])) echo 'display: block;'; ?>">
+                                <?php if (!empty($errors['license_expiry'])) echo htmlspecialchars($errors['license_expiry']); ?>
+                            </div>
+                            <!-- **ADDED VALIDATION: END** -->
+                        </div>
                     </div>
                 </div>
                 
@@ -1006,6 +1052,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (confirmPassword && password !== confirmPassword) {
                 confirmPasswordInput.classList.add('input-error');
+                errorElement.innerText = "Passwords do not match.";
                 errorElement.style.display = 'block';
                 return false;
             } else {
@@ -1029,28 +1076,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function validateForm() {
             let isValid = true;
             
+            // Helper function to show/hide errors
+            function showError(inputElement, errorElement, message) {
+                inputElement.classList.add('input-error');
+                errorElement.innerText = message;
+                errorElement.style.display = 'block';
+            }
+            
+            function clearError(inputElement, errorElement) {
+                inputElement.classList.remove('input-error');
+                errorElement.style.display = 'none';
+            }
+
             // Validate first name
             const firstName = document.getElementById('first-name');
             const firstNameError = document.getElementById('first-name-error');
             if (!firstName.value.trim()) {
-                firstName.classList.add('input-error');
-                firstNameError.style.display = 'block';
+                showError(firstName, firstNameError, 'First name is required.');
                 isValid = false;
             } else {
-                firstName.classList.remove('input-error');
-                firstNameError.style.display = 'none';
+                clearError(firstName, firstNameError);
             }
             
             // Validate last name
             const lastName = document.getElementById('last-name');
             const lastNameError = document.getElementById('last-name-error');
             if (!lastName.value.trim()) {
-                lastName.classList.add('input-error');
-                lastNameError.style.display = 'block';
+                showError(lastName, lastNameError, 'Last name is required.');
                 isValid = false;
             } else {
-                lastName.classList.remove('input-error');
-                lastNameError.style.display = 'none';
+                clearError(lastName, lastNameError);
             }
             
             // Validate email
@@ -1058,12 +1113,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const emailError = document.getElementById('email-error');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email.value)) {
-                email.classList.add('input-error');
-                emailError.style.display = 'block';
+                showError(email, emailError, 'Please enter a valid email address.');
                 isValid = false;
             } else {
-                email.classList.remove('input-error');
-                emailError.style.display = 'none';
+                clearError(email, emailError);
             }
             
             // Validate password
@@ -1071,12 +1124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const passwordError = document.getElementById('password-error');
             const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
             if (!passwordRegex.test(password.value)) {
-                password.classList.add('input-error');
-                passwordError.style.display = 'block';
+                showError(password, passwordError, 'Password does not meet the requirements.');
                 isValid = false;
             } else {
-                password.classList.remove('input-error');
-                passwordError.style.display = 'none';
+                clearError(password, passwordError);
             }
             
             // Validate confirm password
@@ -1089,24 +1140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const phoneError = document.getElementById('phone-error');
             const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
             if (!phoneRegex.test(phone.value)) {
-                phone.classList.add('input-error');
-                phoneError.style.display = 'block';
+                showError(phone, phoneError, 'Please enter a valid phone number.');
                 isValid = false;
             } else {
-                phone.classList.remove('input-error');
-                phoneError.style.display = 'none';
+                clearError(phone, phoneError);
             }
             
             // Validate date of birth
             const dob = document.getElementById('dob');
             const dobError = document.getElementById('dob-error');
             if (!dob.value) {
-                dob.classList.add('input-error');
-                dobError.style.display = 'block';
+                showError(dob, dobError, 'Date of birth is required.');
                 isValid = false;
             } else {
-                dob.classList.remove('input-error');
-                dobError.style.display = 'none';
+                clearError(dob, dobError);
             }
             
             // Validate address fields
@@ -1116,19 +1163,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const errorElement = document.getElementById(`${field}-error`);
                 
                 if (!element.value.trim() && element.required) {
-                    element.classList.add('input-error');
-                    errorElement.style.display = 'block';
+                    showError(element, errorElement, 'This field is required.');
                     isValid = false;
                 } else {
-                    element.classList.remove('input-error');
-                    errorElement.style.display = 'none';
+                    clearError(element, errorElement);
                 }
             });
-            
+
+            // **ADDED VALIDATION: START**
+            // Validate license expiry
+            const licenseNumber = document.getElementById('license-number');
+            const licenseExpiry = document.getElementById('license-expiry');
+            const licenseExpiryError = document.getElementById('license-expiry-error');
+
+            if (licenseNumber.value.trim() && !licenseExpiry.value) {
+                showError(licenseExpiry, licenseExpiryError, 'Expiry date is required with license number.');
+                isValid = false;
+            } else if (licenseExpiry.value) {
+                const today = new Date();
+                const expiryDate = new Date(licenseExpiry.value);
+                // Set time to 0 to compare dates only, not time
+                today.setHours(0, 0, 0, 0);
+
+                if (expiryDate <= today) {
+                    showError(licenseExpiry, licenseExpiryError, 'License expiry date must be in the future.');
+                    isValid = false;
+                } else {
+                    clearError(licenseExpiry, licenseExpiryError);
+                }
+            } else {
+                clearError(licenseExpiry, licenseExpiryError);
+            }
+            // **ADDED VALIDATION: END**
+
             // Validate terms
             const terms = document.getElementById('terms');
             const termsError = document.getElementById('terms-error');
             if (!terms.checked) {
+                termsError.innerText = 'You must accept the terms and conditions.';
                 termsError.style.display = 'block';
                 isValid = false;
             } else {
